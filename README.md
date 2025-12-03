@@ -9,6 +9,11 @@
 - `block_lecture.pdf`: 编译后的PDF讲义（23页）
 - `block_lecture.pptx`: PowerPoint演示文稿（13页，由generate_pptx.py自动生成）
 - `generate_pptx.py`: 用于从LaTeX内容生成PPTX的Python脚本
+- `template.pptx`: 中文风格PPT模板（用于美化演示文稿）
+- `Template2.pptx`: 现代专业PPT模板（用于美化演示文稿）
+- `beautify_pptx.py`: 使用模板美化PPT的Python脚本
+- `block_lecture_beautified_v1.pptx`: 使用template.pptx模板美化后的演示文稿
+- `block_lecture_beautified_v2.pptx`: 使用Template2.pptx模板美化后的演示文稿
 
 ## 例题内容
 
@@ -57,11 +62,17 @@ xelatex block_lecture.tex
 # 安装依赖
 pip install python-pptx
 
-# 生成PPTX
+# 生成基础PPTX
 python3 generate_pptx.py
+
+# 美化PPTX（使用模板）
+python3 beautify_pptx.py
 ```
 
-或者直接使用已生成的 `block_lecture.pptx` 文件。
+或者直接使用已生成的文件：
+- `block_lecture.pptx` - 基础版本
+- `block_lecture_beautified_v1.pptx` - 使用template.pptx美化（中文风格）
+- `block_lecture_beautified_v2.pptx` - 使用Template2.pptx美化（现代专业风格）
 
 ## 页面布局
 

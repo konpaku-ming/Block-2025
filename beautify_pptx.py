@@ -1,0 +1,240 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Beautify the block_lecture.pptx using templates.
+This script applies template designs to the existing presentation.
+"""
+
+from pptx import Presentation
+from pptx.util import Inches, Pt
+from pptx.enum.text import PP_ALIGN
+import os
+
+def remove_template_slides(presentation):
+    """Remove all slides from a presentation"""
+    while len(presentation.slides) > 0:
+        rId = presentation.slides._sldIdLst[0].rId
+        presentation.part.drop_rel(rId)
+        del presentation.slides._sldIdLst[0]
+
+def extract_slide_content(source_slide, slide_idx):
+    """Extract title and content shapes from a source slide"""
+    title_text = ""
+    content_shapes = []
+    
+    for shape in source_slide.shapes:
+        if shape.has_text_frame and shape.text.strip():
+            # For title slide (slide 0), treat the main text box as title
+            if slide_idx == 0 and not content_shapes:
+                title_text = shape.text
+            # For content slides, check if it's positioned at the top (< 1 inch)
+            elif shape.top < Inches(1.0):
+                title_text = shape.text
+            else:
+                content_shapes.append(shape)
+    
+    return title_text, content_shapes
+
+def apply_template1(source_pptx, template_pptx, output_pptx):
+    """Apply template.pptx design to the source presentation"""
+    print(f"Applying template.pptx to {source_pptx}...")
+    
+    # Load source and template
+    source_prs = Presentation(source_pptx)
+    
+    # Create new presentation using the template
+    new_prs = Presentation(template_pptx)
+    
+    # Remove all slides from template
+    remove_template_slides(new_prs)
+    
+    # Process each slide from source
+    for slide_idx, source_slide in enumerate(source_prs.slides):
+        print(f"Processing slide {slide_idx + 1}/{len(source_prs.slides)}...")
+        
+        # Choose appropriate layout based on slide content
+        if slide_idx == 0:
+            # Title slide - use 封面-01
+            layout = new_prs.slide_layouts[0]
+        else:
+            # Content slide - use 标题和内容（一般样式）
+            layout = new_prs.slide_layouts[9]
+        
+        # Add new slide with chosen layout
+        new_slide = new_prs.slides.add_slide(layout)
+        
+        # Extract title and content
+        title_text, content_shapes = extract_slide_content(source_slide, slide_idx)
+        
+        # Apply title and content
+        if slide_idx == 0:
+            # Title slide - use TITLE placeholder
+            if title_text:
+                for new_shape in new_slide.shapes:
+                    if new_shape.is_placeholder and new_shape.placeholder_format.type == 1:
+                        new_shape.text = title_text
+                        for para in new_shape.text_frame.paragraphs:
+                            para.alignment = PP_ALIGN.CENTER
+                            if para.runs:
+                                para.runs[0].font.bold = True
+                        break
+        else:
+            # Content slides - Layout 9 has two BODY placeholders
+            # First BODY is for title, second BODY is for content
+            body_placeholders = [s for s in new_slide.shapes 
+                               if s.is_placeholder and s.placeholder_format.type == 2]
+            body_placeholders.sort(key=lambda s: s.top)  # Sort by vertical position
+            
+            # Apply title to first (top) BODY placeholder
+            if title_text and len(body_placeholders) > 0:
+                title_placeholder = body_placeholders[0]
+                title_placeholder.text = title_text
+                for para in title_placeholder.text_frame.paragraphs:
+                    para.alignment = PP_ALIGN.LEFT
+                    if para.runs:
+                        para.runs[0].font.bold = True
+                        para.runs[0].font.size = Pt(24)
+            
+            # Apply content to second (bottom) BODY placeholder
+            if content_shapes and len(body_placeholders) > 1:
+                content_placeholder = body_placeholders[1]
+                content_placeholder.text_frame.clear()
+                # Copy all paragraphs from all content shapes
+                for content_shape in content_shapes:
+                    for src_para in content_shape.text_frame.paragraphs:
+                        para = content_placeholder.text_frame.add_paragraph()
+                        para.text = src_para.text
+                        para.level = src_para.level
+                        # Preserve font size if available
+                        if src_para.runs and src_para.runs[0].font.size:
+                            for run in para.runs:
+                                run.font.size = src_para.runs[0].font.size
+                # Remove the first empty paragraph if it exists
+                if len(content_placeholder.text_frame.paragraphs) > 0 and content_placeholder.text_frame.paragraphs[0].text == "":
+                    p = content_placeholder.text_frame.paragraphs[0]._element
+                    p.getparent().remove(p)
+    
+    # Save the new presentation
+    new_prs.save(output_pptx)
+    print(f"Saved beautified presentation to: {output_pptx}")
+    print(f"Total slides: {len(new_prs.slides)}")
+
+def apply_template2(source_pptx, template_pptx, output_pptx):
+    """Apply Template2.pptx design to the source presentation"""
+    print(f"Applying Template2.pptx to {source_pptx}...")
+    
+    # Load source and template
+    source_prs = Presentation(source_pptx)
+    
+    # Create new presentation using the template
+    new_prs = Presentation(template_pptx)
+    
+    # Remove all slides from template
+    remove_template_slides(new_prs)
+    
+    # Process each slide from source
+    for slide_idx, source_slide in enumerate(source_prs.slides):
+        print(f"Processing slide {slide_idx + 1}/{len(source_prs.slides)}...")
+        
+        # Choose appropriate layout based on slide content
+        if slide_idx == 0:
+            # Title slide - use TITLE layout
+            layout = new_prs.slide_layouts[0]
+        else:
+            # Content slide - use TITLE_AND_BODY layout
+            layout = new_prs.slide_layouts[2]
+        
+        # Add new slide with chosen layout
+        new_slide = new_prs.slides.add_slide(layout)
+        
+        # Extract title and content
+        title_text, content_shapes = extract_slide_content(source_slide, slide_idx)
+        
+        # Apply title
+        if title_text:
+            for new_shape in new_slide.shapes:
+                # Handle both CENTER_TITLE (3) and TITLE (1) placeholder types
+                if new_shape.is_placeholder and new_shape.placeholder_format.type in [1, 3]:
+                    new_shape.text = title_text
+                    for para in new_shape.text_frame.paragraphs:
+                        para.alignment = PP_ALIGN.CENTER if slide_idx == 0 else PP_ALIGN.LEFT
+                        if para.runs:
+                            para.runs[0].font.bold = True
+                    break
+        
+        # Apply content
+        if content_shapes:
+            for new_shape in new_slide.shapes:
+                if new_shape.is_placeholder and new_shape.placeholder_format.type == 2:  # Content placeholder
+                    new_shape.text_frame.clear()
+                    # Copy all paragraphs from all content shapes
+                    for content_shape in content_shapes:
+                        for src_para in content_shape.text_frame.paragraphs:
+                            para = new_shape.text_frame.add_paragraph()
+                            para.text = src_para.text
+                            para.level = src_para.level
+                            # Preserve font size if available
+                            if src_para.runs and src_para.runs[0].font.size:
+                                for run in para.runs:
+                                    run.font.size = src_para.runs[0].font.size
+                    # Remove the first empty paragraph if it exists
+                    if len(new_shape.text_frame.paragraphs) > 0 and new_shape.text_frame.paragraphs[0].text == "":
+                        p = new_shape.text_frame.paragraphs[0]._element
+                        p.getparent().remove(p)
+                    break
+    
+    # Save the new presentation
+    new_prs.save(output_pptx)
+    print(f"Saved beautified presentation to: {output_pptx}")
+    print(f"Total slides: {len(new_prs.slides)}")
+
+def main():
+    """Main function to generate beautified presentations"""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    source_pptx = os.path.join(script_dir, 'block_lecture.pptx')
+    template1_pptx = os.path.join(script_dir, 'template.pptx')
+    template2_pptx = os.path.join(script_dir, 'Template2.pptx')
+    
+    output1_pptx = os.path.join(script_dir, 'block_lecture_beautified_v1.pptx')
+    output2_pptx = os.path.join(script_dir, 'block_lecture_beautified_v2.pptx')
+    
+    # Validate required files exist
+    required_files = [
+        (source_pptx, 'Source presentation'),
+        (template1_pptx, 'Template 1'),
+        (template2_pptx, 'Template 2')
+    ]
+    
+    missing_files = []
+    for filepath, description in required_files:
+        if not os.path.exists(filepath):
+            missing_files.append(f"{description}: {filepath}")
+    
+    if missing_files:
+        print("❌ Error: Required files are missing:")
+        for missing in missing_files:
+            print(f"  - {missing}")
+        print("\nPlease ensure all required files are present before running this script.")
+        return 1
+    
+    # Apply both templates
+    print("=" * 60)
+    print("Creating beautified version 1 using template.pptx...")
+    print("=" * 60)
+    apply_template1(source_pptx, template1_pptx, output1_pptx)
+    
+    print("\n" + "=" * 60)
+    print("Creating beautified version 2 using Template2.pptx...")
+    print("=" * 60)
+    apply_template2(source_pptx, template2_pptx, output2_pptx)
+    
+    print("\n" + "=" * 60)
+    print("✅ Beautification complete!")
+    print(f"✅ Created: {output1_pptx}")
+    print(f"✅ Created: {output2_pptx}")
+    print("=" * 60)
+    return 0
+
+if __name__ == "__main__":
+    exit(main())
