@@ -14,6 +14,8 @@
 - `beautify_pptx.py`: 使用模板美化PPT的Python脚本
 - `block_lecture_beautified_v1.pptx`: 使用template.pptx模板美化后的演示文稿
 - `block_lecture_beautified_v2.pptx`: 使用Template2.pptx模板美化后的演示文稿
+- `convert_math_to_latex.py`: 将数学符号转换为LaTeX公式的Python脚本
+- `block_lecture_beautified_v2_latex.pptx`: 数学公式使用LaTeX符号表示的演示文稿
 
 ## 例题内容
 
@@ -73,6 +75,28 @@ python3 beautify_pptx.py
 - `block_lecture.pptx` - 基础版本
 - `block_lecture_beautified_v1.pptx` - 使用template.pptx美化（中文风格）
 - `block_lecture_beautified_v2.pptx` - 使用Template2.pptx美化（现代专业风格）
+- `block_lecture_beautified_v2_latex.pptx` - 使用LaTeX符号表示数学公式的版本
+
+### 数学公式转换为LaTeX
+
+将演示文稿中的数学符号（如 √、₁、₂、≥ 等）转换为LaTeX格式（如 $\sqrt{n}$, $a_{1}$, $\geq$ 等）：
+
+```bash
+# 转换数学符号为LaTeX
+python3 convert_math_to_latex.py
+```
+
+这个脚本会：
+- 将Unicode数学符号转换为LaTeX命令
+- 将数学表达式用 `$...$` 包裹
+- 生成 `block_lecture_beautified_v2_latex.pptx` 文件
+
+转换示例：
+- `a₁, a₂, aₙ` → `$a_{1}$, $a_{2}$, $a_{n}$`
+- `√n` → `$\sqrt{n}$`
+- `O(√n)` → `$O(\sqrt{n})$`
+- `≥, ≤` → `$\geq$, $\leq$`
+- `⌊√a⌋` → `$\lfloor \sqrt{a} \rfloor$`
 
 ## 页面布局
 
