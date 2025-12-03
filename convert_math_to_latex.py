@@ -13,6 +13,13 @@ from pptx.dml.color import RGBColor
 import re
 import os
 
+# Mathematical Unicode characters to detect
+MATH_UNICODE_CHARS = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉', 
+                      'ₙ', 'ᵢ', 'ᵣ', '√', '⌊', '⌋', '≤', '≥', '≠', '←', '→', '⁹']
+
+# Font color type constant (1 = RGB color)
+RGB_COLOR_TYPE = 1
+
 def convert_math_to_latex(text):
     """
     Convert Unicode mathematical notation to LaTeX-style notation.
@@ -106,7 +113,9 @@ def convert_math_to_latex(text):
     # Remove empty math mode
     result = re.sub(r'\$\s*\$', ' ', result)
     # Merge consecutive math expressions (run multiple times for complex cases)
-    for _ in range(20):
+    # We iterate up to 20 times to handle deeply nested expressions
+    MAX_MERGE_ITERATIONS = 20
+    for _ in range(MAX_MERGE_ITERATIONS):
         old_result = result
         result = re.sub(r'\$([^$\n]*?)\$\s*\$([^$\n]*?)\$', r'$\1 \2$', result)
         if old_result == result:
@@ -144,9 +153,7 @@ def process_presentation(input_file, output_file):
                         continue
                     
                     # Check if text contains mathematical content
-                    has_math = any(char in original_text for char in 
-                                 ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉', 
-                                  'ₙ', 'ᵢ', 'ᵣ', '√', '⌊', '⌋', '≤', '≥', '≠', '←', '→', '⁹'])
+                    has_math = any(char in original_text for char in MATH_UNICODE_CHARS)
                     has_math = has_math or 'O(' in original_text
                     
                     if has_math:
@@ -164,7 +171,8 @@ def process_presentation(input_file, output_file):
                                 font_size = first_run.font.size
                                 font_bold = first_run.font.bold
                                 font_name = first_run.font.name
-                                font_color = first_run.font.color.rgb if first_run.font.color.type == 1 else None
+                                # RGB_COLOR_TYPE (1) indicates RGB color
+                                font_color = first_run.font.color.rgb if first_run.font.color.type == RGB_COLOR_TYPE else None
                             else:
                                 font_size = None
                                 font_bold = None
@@ -197,10 +205,11 @@ def process_presentation(input_file, output_file):
 
 def main():
     """Main function"""
+    # Get the directory where this script is located
     script_dir = os.path.dirname(os.path.abspath(__file__))
     
-    # Use the repository directory, not the script directory
-    repo_dir = '/home/runner/work/Block-2025/Block-2025'
+    # Default to script directory, but allow override via environment variable
+    repo_dir = os.environ.get('REPO_DIR', script_dir)
     
     input_file = os.path.join(repo_dir, 'block_lecture_beautified_v2.pptx')
     output_file = os.path.join(repo_dir, 'block_lecture_beautified_v2_latex.pptx')
