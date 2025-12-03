@@ -1,0 +1,728 @@
+\documentclass[UTF8,a4paper,20pt]{ctexart}
+\usepackage{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{enumitem}
+
+\geometry{left=2cm,right=2cm,top=2cm,bottom=2cm}
+
+% 设置字体大小适合PPT
+\usepackage{anyfontsize}
+\renewcommand{\normalsize}{\fontsize{16pt}{24pt}\selectfont}
+\renewcommand{\large}{\fontsize{20pt}{28pt}\selectfont}
+\renewcommand{\Large}{\fontsize{24pt}{32pt}\selectfont}
+\renewcommand{\LARGE}{\fontsize{28pt}{36pt}\selectfont}
+\renewcommand{\huge}{\fontsize{32pt}{40pt}\selectfont}
+\renewcommand{\Huge}{\fontsize{36pt}{44pt}\selectfont}
+
+% 设置行间距
+\linespread{1.5}
+
+% TikZ库
+\usetikzlibrary{arrows.meta,positioning,shapes,calc}
+
+\title{\Huge\bfseries 分块算法经典例题讲解}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+% ========== 问题1：第1页 - 题目陈述 ==========
+\section*{\LARGE 例题1：区间乘法、区间加法与单点查询}
+
+\subsection*{题目描述}
+
+给出一个长度为 $n$ 的数列 $a_1, a_2, \ldots, a_n$，以及 $n$ 个操作。
+
+\subsection*{操作类型}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{操作0}（区间加法）：$\mathrm{opt} = 0, l, r, c$ 
+    
+    将区间 $[l, r]$ 中的所有数字都加上 $c$
+    
+    \item \textbf{操作1}（区间乘法）：$\mathrm{opt} = 1, l, r, c$
+    
+    将区间 $[l, r]$ 中的所有数字都乘以 $c$
+    
+    \item \textbf{操作2}（单点查询）：$\mathrm{opt} = 2, r$
+    
+    查询 $a_r$ 的当前值
+\end{itemize}
+
+\subsection*{输入格式}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 第一行：整数 $n$
+    \item 第二行：$n$ 个整数 $a_1, a_2, \ldots, a_n$
+    \item 接下来 $n$ 行：每行一个操作
+\end{itemize}
+
+\newpage
+
+% ========== 问题1：第2页 - 解法 ==========
+\subsection*{\Large 解法：分块 + 懒标记}
+
+\subsubsection*{核心思想}
+
+将长度为 $n$ 的数列分成 $\sqrt{n}$ 个块，每块大小约为 $\sqrt{n}$。
+
+对每个块维护两个懒标记：
+\begin{itemize}[leftmargin=2cm]
+    \item $\mathrm{mul}[i]$：第 $i$ 块的乘法标记（初始为1）
+    \item $\mathrm{add}[i]$：第 $i$ 块的加法标记（初始为0）
+\end{itemize}
+
+\subsubsection*{可视化示意}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.9]
+    % 数组元素
+    \foreach \i in {0,...,8} {
+        \draw (\i*1.2,0) rectangle ++(1,1);
+        \node at (\i*1.2+0.5,0.5) {$a_{\i}$};
+    }
+    
+    % 块的划分
+    \draw[red, very thick] (0,-0.2) -- (0,-0.5) -- (3.6,-0.5) -- (3.6,-0.2);
+    \node[red] at (1.8,-0.8) {块1};
+    
+    \draw[blue, very thick] (3.6,-0.2) -- (3.6,-0.5) -- (7.2,-0.5) -- (7.2,-0.2);
+    \node[blue] at (5.4,-0.8) {块2};
+    
+    \draw[green!60!black, very thick] (7.2,-0.2) -- (7.2,-0.5) -- (10.8,-0.5) -- (10.8,-0.2);
+    \node[green!60!black] at (9.0,-0.8) {块3};
+    
+    % 标记说明
+    \node[red] at (1.8, -1.5) {$\mathrm{mul}[1], \mathrm{add}[1]$};
+    \node[blue] at (5.4, -1.5) {$\mathrm{mul}[2], \mathrm{add}[2]$};
+    \node[green!60!black] at (9.0, -1.5) {$\mathrm{mul}[3], \mathrm{add}[3]$};
+\end{tikzpicture}
+\end{center}
+
+\subsubsection*{操作实现}
+
+\begin{enumerate}[leftmargin=2cm]
+    \item \textbf{区间加法/乘法}：
+    \begin{itemize}
+        \item 对于完整覆盖的块：只更新懒标记
+        \item 对于部分覆盖的块：暴力修改每个元素
+    \end{itemize}
+    
+    \item \textbf{单点查询}：
+    
+    查询 $a_r$ 时，返回 $a_r \times \mathrm{mul}[\mathrm{block}(r)] + \mathrm{add}[\mathrm{block}(r)]$
+\end{enumerate}
+
+\subsubsection*{标记下传规则}
+
+当需要访问块内具体元素时：
+\[
+a_i \leftarrow a_i \times \mathrm{mul}[\mathrm{block}(i)] + \mathrm{add}[\mathrm{block}(i)]
+\]
+然后重置标记：$\mathrm{mul}[\mathrm{block}(i)] = 1, \mathrm{add}[\mathrm{block}(i)] = 0$
+
+\newpage
+
+% ========== 问题1：第3页 - 复杂度分析 ==========
+\subsection*{\Large 复杂度分析}
+
+\subsubsection*{空间复杂度}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 原数组：$O(n)$
+    \item 块标记：$O(\sqrt{n})$ 个块，每块2个标记
+    \item 总空间：$O(n)$
+\end{itemize}
+
+\subsubsection*{时间复杂度}
+
+\textbf{区间修改操作}（加法或乘法）：
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    % 区间示意
+    \foreach \i in {0,...,10} {
+        \draw (\i*0.8,0) rectangle ++(0.7,0.7);
+    }
+    
+    % 标记修改区间
+    \draw[red, line width=2pt] (1.5,-0.3) -- (7.5,-0.3);
+    \node[red] at (4.5,-0.7) {修改区间 $[l, r]$};
+    
+    % 标记不同部分
+    \draw[orange, dashed, thick] (1.5,0.7) -- (1.5,1.2) -- (2.4,1.2) -- (2.4,0.7);
+    \node[orange] at (1.95,1.5) {\small 散块};
+    
+    \draw[blue, dashed, thick] (2.4,0.7) -- (2.4,1.5) -- (7.2,1.5) -- (7.2,0.7);
+    \node[blue] at (4.8,1.8) {完整块（$O(\sqrt{n})$个）};
+    
+    \draw[orange, dashed, thick] (7.2,0.7) -- (7.2,1.2) -- (7.5,1.2) -- (7.5,0.7);
+    \node[orange] at (7.8,1.5) {\small 散块};
+\end{tikzpicture}
+\end{center}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 散块（两端不完整的块）：暴力修改，$O(\sqrt{n})$
+    \item 完整块：只修改标记，最多 $O(\sqrt{n})$ 个块，每个 $O(1)$
+    \item \textbf{单次操作}：$O(\sqrt{n})$
+\end{itemize}
+
+\textbf{单点查询操作}：
+
+直接通过下标计算所属块号，应用标记，$O(1)$
+
+\textbf{总复杂度}：
+
+$n$ 个操作，每次 $O(\sqrt{n})$ 或 $O(1)$，总时间复杂度：$\boxed{O(n\sqrt{n})}$
+
+\newpage
+
+% ========== 问题2：第1页 - 题目陈述 ==========
+\section*{\LARGE 例题2：区间查询与区间赋值}
+
+\subsection*{题目描述}
+
+给出一个长度为 $n$ 的数列 $a_1, a_2, \ldots, a_n$，以及 $n$ 个操作。
+
+\subsection*{操作内容}
+
+每个操作由三个参数 $l, r, c$ 组成，执行以下两步：
+
+\begin{enumerate}[leftmargin=2cm]
+    \item \textbf{查询}：统计区间 $[l, r]$ 中有多少个元素等于 $c$
+    \item \textbf{修改}：将区间 $[l, r]$ 中的所有元素都赋值为 $c$
+\end{enumerate}
+
+\subsection*{输入格式}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 第一行：整数 $n$
+    \item 第二行：$n$ 个整数 $a_1, a_2, \ldots, a_n$
+    \item 接下来 $n$ 行：每行三个整数 $l, r, c$
+\end{itemize}
+
+\subsection*{示例}
+
+初始数组：$[1, 2, 2, 3, 3]$
+
+操作 $l=2, r=4, c=2$：
+\begin{itemize}
+    \item 查询结果：区间 $[2,4]$ 是 $[2, 2, 3]$，有2个元素等于2
+    \item 修改后：$[1, 2, 2, 2, 3]$
+\end{itemize}
+
+\newpage
+
+% ========== 问题2：第2页 - 解法 ==========
+\subsection*{\Large 解法：分块 + 区间赋值标记}
+
+\subsubsection*{核心思想}
+
+将数组分成 $\sqrt{n}$ 个块，每块维护：
+\begin{itemize}[leftmargin=2cm]
+    \item $\mathrm{tag}[i]$：整块赋值标记（-1表示无标记）
+    \item 每个元素的实际值
+\end{itemize}
+
+\subsubsection*{可视化操作流程}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.85]
+    % 第一行：初始状态
+    \node[left] at (-0.5,2) {\textbf{初始:}};
+    \foreach \i/\v in {0/1,1/2,2/2,3/3,4/3,5/1,6/4,7/4,8/5} {
+        \draw (\i*1.1,1.5) rectangle ++(1,1);
+        \node at (\i*1.1+0.5,2) {$\v$};
+    }
+    
+    % 块划分
+    \draw[red, thick] (0,1.3) -- (0,1.1) -- (3.3,1.1) -- (3.3,1.3);
+    \draw[blue, thick] (3.3,1.3) -- (3.3,1.1) -- (6.6,1.1) -- (6.6,1.3);
+    \draw[green!60!black, thick] (6.6,1.3) -- (6.6,1.1) -- (9.9,1.1) -- (9.9,1.3);
+    
+    % 操作说明
+    \node at (5, 0.3) {操作：$l=2, r=7, c=2$（查询并赋值）};
+    
+    % 第二行：操作后状态
+    \node[left] at (-0.5,-0.5) {\textbf{操作后:}};
+    \foreach \i/\v in {0/1,1/2,2/2,3/2,4/2,5/2,6/2,7/2,8/5} {
+        \draw (\i*1.1,-1) rectangle ++(1,1);
+        \node at (\i*1.1+0.5,-0.5) {$\v$};
+    }
+    
+    % 标记修改的区间
+    \draw[red, line width=3pt, opacity=0.5] (2.2,-1.3) -- (8.8,-1.3);
+    
+    % 标记操作方式
+    \node[orange] at (2.2,-1.8) {\small 散块};
+    \node[blue] at (5,-1.8) {整块标记};
+    \node[orange] at (7.7,-1.8) {\small 散块};
+\end{tikzpicture}
+\end{center}
+
+\subsubsection*{操作实现}
+
+\textbf{区间查询与赋值}：
+
+\begin{enumerate}[leftmargin=2cm]
+    \item \textbf{散块}（两端不完整块）：
+    \begin{itemize}
+        \item 先下传该块的标记（如果有）
+        \item 遍历散块元素，统计等于 $c$ 的个数
+        \item 将散块元素逐个赋值为 $c$
+    \end{itemize}
+    
+    \item \textbf{整块}（完全覆盖的块）：
+    \begin{itemize}
+        \item 如果该块有标记 $\mathrm{tag}[i]$：
+        \begin{itemize}
+            \item 若 $\mathrm{tag}[i] = c$，贡献块大小个 $c$
+            \item 否则贡献0个 $c$
+        \end{itemize}
+        \item 否则遍历块内所有元素统计
+        \item 给整块打上标记 $\mathrm{tag}[i] = c$
+    \end{itemize}
+\end{enumerate}
+
+\newpage
+
+% ========== 问题2：第3页 - 复杂度分析 ==========
+\subsection*{\Large 复杂度分析}
+
+\subsubsection*{块大小选择}
+
+设块大小为 $B$，则有 $\frac{n}{B}$ 个块。
+
+\subsubsection*{单次操作时间复杂度}
+
+\begin{center}
+\begin{tikzpicture}[scale=1.2]
+    % 创建表格
+    \node at (0,2) {\textbf{操作部分}};
+    \node at (3,2) {\textbf{时间复杂度}};
+    
+    \draw (-1.5,1.5) -- (5,1.5);
+    
+    \node[align=left] at (0,1) {散块处理};
+    \node at (3,1) {$O(B)$};
+    
+    \node[align=left] at (0,0.3) {整块标记};
+    \node at (3,0.3) {$O(\frac{n}{B})$};
+    
+    \node[align=left] at (0,-0.4) {整块查询（最坏）};
+    \node at (3,-0.4) {$O(B \cdot \frac{n}{B}) = O(n)$};
+    
+    \draw (-1.5,-0.8) -- (5,-0.8);
+    
+    \node[align=left] at (0,-1.3) {\textbf{单次总复杂度}};
+    \node at (3,-1.3) {$\boxed{O(n)}$};
+\end{tikzpicture}
+\end{center}
+
+\subsubsection*{优化分析}
+
+\textbf{关键观察}：整块查询只在块没有标记时遍历，一旦打上标记后，之后的查询都是 $O(1)$。
+
+\textbf{均摊分析}：
+\begin{itemize}[leftmargin=2cm]
+    \item 每个元素最多被遍历常数次（打标记前）
+    \item 打标记后的查询都是 $O(1)$
+    \item 散块操作：$O(B) = O(\sqrt{n})$
+    \item 整块标记：$O(\frac{n}{B}) = O(\sqrt{n})$
+\end{itemize}
+
+选择 $B = \sqrt{n}$，单次操作均摊：$O(\sqrt{n})$
+
+\textbf{总时间复杂度}（均摊）：$\boxed{O(n\sqrt{n})}$
+
+\newpage
+
+% ========== 问题3：第1页 - 题目陈述 ==========
+\section*{\LARGE 例题3：区间开方与区间求和}
+
+\subsection*{题目描述}
+
+给出一个长度为 $n$ 的数列 $a_1, a_2, \ldots, a_n$，以及 $n$ 个操作。
+
+\subsection*{操作类型}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{操作0}（区间开方）：$\mathrm{opt} = 0, l, r$ 
+    
+    对区间 $[l, r]$ 中的每个元素 $a_i$ 进行开方：
+    \[
+    a_i \leftarrow \lfloor \sqrt{a_i} \rfloor
+    \]
+    
+    \item \textbf{操作1}（区间求和）：$\mathrm{opt} = 1, l, r$
+    
+    查询区间 $[l, r]$ 中所有元素的和：
+    \[
+    \sum_{i=l}^{r} a_i
+    \]
+\end{itemize}
+
+\subsection*{输入格式}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 第一行：整数 $n$
+    \item 第二行：$n$ 个整数 $a_1, a_2, \ldots, a_n$
+    \item 接下来 $n$ 行：每行一个操作
+\end{itemize}
+
+\subsection*{示例}
+
+初始：$[16, 9, 4, 1]$
+
+操作0，$l=1, r=3$：$[4, 3, 2, 1]$
+
+操作1，$l=1, r=4$：输出 $4+3+2+1=10$
+
+\newpage
+
+% ========== 问题3：第2页 - 解法 ==========
+\subsection*{\Large 解法：分块 + 区间和维护}
+
+\subsubsection*{核心思想}
+
+\textbf{关键性质}：开方操作使数字快速减小
+
+\begin{center}
+\begin{tikzpicture}[scale=1]
+    \node at (0,0) {$10^9$};
+    \draw[->,thick] (0.8,0) -- (1.5,0);
+    \node at (2.3,0) {$31622$};
+    \draw[->,thick] (3.1,0) -- (3.8,0);
+    \node at (4.4,0) {$177$};
+    \draw[->,thick] (5,0) -- (5.7,0);
+    \node at (6.1,0) {$13$};
+    \draw[->,thick] (6.6,0) -- (7.3,0);
+    \node at (7.7,0) {$3$};
+    \draw[->,thick] (8.1,0) -- (8.8,0);
+    \node at (9.2,0) {$1$};
+    
+    \node[below] at (4.5,-0.8) {约 $\log \log n$ 次后变为1};
+\end{tikzpicture}
+\end{center}
+
+将数组分成 $\sqrt{n}$ 个块，每块维护：
+\begin{itemize}[leftmargin=2cm]
+    \item $\mathrm{sum}[i]$：第 $i$ 块的元素和
+    \item $\mathrm{max}[i]$：第 $i$ 块的最大值
+\end{itemize}
+
+\subsubsection*{可视化数据结构}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    % 数组
+    \foreach \i/\v in {0/16,1/9,2/4,3/16,4/25,5/36} {
+        \draw (\i*1.5,2) rectangle ++(1.3,1);
+        \node at (\i*1.5+0.65,2.5) {$\v$};
+    }
+    
+    % 块划分
+    \draw[red, very thick] (0,1.8) -- (0,1.5) -- (4.5,1.5) -- (4.5,1.8);
+    \node[red] at (2.25,1.2) {块1};
+    
+    \draw[blue, very thick] (4.5,1.8) -- (4.5,1.5) -- (9,1.5) -- (9,1.8);
+    \node[blue] at (6.75,1.2) {块2};
+    
+    % 块信息
+    \draw[red, thick] (0.5,0.5) rectangle ++(3,0.6);
+    \node[red, align=left] at (2, 0.8) {$\mathrm{sum}[1]=29, \mathrm{max}[1]=16$};
+    
+    \draw[blue, thick] (5,0.5) rectangle ++(3,0.6);
+    \node[blue, align=left] at (6.5, 0.8) {$\mathrm{sum}[2]=61, \mathrm{max}[2]=36$};
+\end{tikzpicture}
+\end{center}
+
+\subsubsection*{操作实现}
+
+\textbf{区间开方}：
+\begin{enumerate}[leftmargin=2cm]
+    \item 对于整块：如果 $\mathrm{max}[i] \leq 1$，跳过（已收敛）
+    \item 否则遍历块内元素，逐个开方，更新 $\mathrm{sum}[i]$ 和 $\mathrm{max}[i]$
+    \item 散块：直接暴力修改
+\end{enumerate}
+
+\textbf{区间求和}：
+\begin{enumerate}[leftmargin=2cm]
+    \item 整块：直接累加 $\mathrm{sum}[i]$，$O(1)$
+    \item 散块：遍历累加，$O(\sqrt{n})$
+\end{enumerate}
+
+\newpage
+
+% ========== 问题3：第3页 - 复杂度分析 ==========
+\subsection*{\Large 复杂度分析}
+
+\subsubsection*{空间复杂度}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 原数组：$O(n)$
+    \item 块信息：$O(\sqrt{n})$ 个块，每块存储和与最大值
+    \item 总空间：$O(n)$
+\end{itemize}
+
+\subsubsection*{时间复杂度 - 关键分析}
+
+\textbf{开方操作的收敛性}：
+
+\begin{center}
+\begin{tikzpicture}[scale=1.1]
+    \draw[->] (0,0) -- (7,0) node[right] {开方次数};
+    \draw[->] (0,0) -- (0,4) node[above] {数值};
+    
+    % 绘制曲线
+    \draw[thick, blue] plot[domain=0:6, samples=100] (\x, {4*exp(-0.8*\x)});
+    
+    % 标记点
+    \filldraw[red] (0,4) circle (2pt) node[left] {$10^9$};
+    \filldraw[red] (1,1.8) circle (2pt) node[above] {$\sim 31622$};
+    \filldraw[red] (2,0.8) circle (2pt);
+    \filldraw[red] (3,0.4) circle (2pt);
+    \filldraw[red] (5,0.1) circle (2pt) node[right] {$\leq 1$};
+    
+    % 标记收敛
+    \draw[dashed] (0,0.2) -- (7,0.2);
+    \node at (7,0.5) {收敛};
+\end{tikzpicture}
+\end{center}
+
+\textbf{每个元素最多被开方 $O(\log \log V)$ 次}，其中 $V$ 是元素的最大值。
+
+\subsubsection*{操作复杂度}
+
+\textbf{区间求和}：
+\begin{itemize}[leftmargin=2cm]
+    \item 整块：$O(\sqrt{n})$ 个块，每块 $O(1)$
+    \item 散块：$O(\sqrt{n})$
+    \item 单次：$O(\sqrt{n})$
+\end{itemize}
+
+\textbf{区间开方}（均摊）：
+\begin{itemize}[leftmargin=2cm]
+    \item 每个元素被真正修改的次数：$O(\log \log V)$
+    \item 单次操作：最坏 $O(n)$，但均摊 $O(\sqrt{n} \log \log V)$
+\end{itemize}
+
+\textbf{总时间复杂度}：$\boxed{O(n\sqrt{n} \log \log V)}$
+
+\newpage
+
+% ========== 问题4：第1页 - 题目陈述 ==========
+\section*{\LARGE 例题4：区间生长与区间计数}
+
+\subsection*{题目描述}
+
+有 $n$ 株花，每株花有一个初始高度（$\leq 1000$ 的自然数）。
+
+有两个角色执行 $q$ 个操作：
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{Lily White}：使花儿生长
+    \item \textbf{Yuka}：统计满足条件的花
+\end{itemize}
+
+\subsection*{操作类型}
+
+\begin{itemize}[leftmargin=2cm]
+    \item \textbf{操作M}（生长）：\texttt{M } $l$ $r$ $h$
+    
+    使区间 $[l, r]$ 内所有花的高度增加 $h$
+    
+    \item \textbf{操作A}（询问）：\texttt{A } $l$ $r$ $k$
+    
+    查询区间 $[l, r]$ 内有多少花的高度不低于 $k$
+    （即统计满足 $a_i \geq k$ 的花的数量）
+\end{itemize}
+
+\subsection*{输入格式}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 第一行：$n$（花的数量）和 $q$（操作数量）
+    \item 第二行：$n$ 个整数表示初始高度
+    \item 接下来 $q$ 行：每行一个操作
+\end{itemize}
+
+\subsection*{示例}
+
+初始：$[5, 3, 8, 2]$
+
+\texttt{M 1 3 2}：$[7, 5, 10, 2]$
+
+\texttt{A 1 4 6}：输出2（$a_1=7 \geq 6$，$a_3=10 \geq 6$）
+
+\newpage
+
+% ========== 问题4：第2页 - 解法 ==========
+\subsection*{\Large 解法：分块 + 懒标记 + 块内排序}
+
+\subsubsection*{核心思想}
+
+将数组分成 $\sqrt{n}$ 个块，每块维护：
+\begin{itemize}[leftmargin=2cm]
+    \item $\mathrm{add}[i]$：第 $i$ 块的加法懒标记
+    \item $\mathrm{sorted}[i]$：第 $i$ 块元素的有序副本
+\end{itemize}
+
+\subsubsection*{数据结构可视化}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.75]
+    % 原数组
+    \node[left] at (-1,2.5) {\textbf{原数组:}};
+    \foreach \i/\v in {0/5,1/3,2/8,3/2,4/7,5/1} {
+        \draw (\i*1.5,2) rectangle ++(1.3,1);
+        \node at (\i*1.5+0.65,2.5) {$\v$};
+    }
+    
+    % 块划分
+    \draw[red, very thick] (0,1.8) -- (0,1.5) -- (4.5,1.5) -- (4.5,1.8);
+    \draw[blue, very thick] (4.5,1.8) -- (4.5,1.5) -- (9,1.5) -- (9,1.8);
+    
+    % 块信息
+    \node[red, left] at (-1,1) {块1:};
+    \draw[red, thick] (0,0.5) rectangle ++(4,0.8);
+    \node[red] at (2, 0.9) {$\mathrm{add}[1]=0$，有序：$[3,5,8]$};
+    
+    \node[blue, left] at (-1,0) {块2:};
+    \draw[blue, thick] (0,-0.5) rectangle ++(4,0.8);
+    \node[blue] at (2, -0.1) {$\mathrm{add}[2]=0$，有序：$[1,2,7]$};
+\end{tikzpicture}
+\end{center}
+
+\subsubsection*{操作实现}
+
+\textbf{区间加法（M操作）}：
+\begin{enumerate}[leftmargin=2cm]
+    \item \textbf{整块}：直接增加 $\mathrm{add}[i]$ 标记，$O(1)$
+    \item \textbf{散块}：
+    \begin{itemize}
+        \item 下传标记到块内所有元素
+        \item 逐个修改散块元素
+        \item 重新排序该块的有序副本，$O(\sqrt{n} \log \sqrt{n})$
+    \end{itemize}
+\end{enumerate}
+
+\textbf{区间计数（A操作）}：
+\begin{enumerate}[leftmargin=2cm]
+    \item \textbf{整块}：
+    \begin{itemize}
+        \item 在有序副本中二分查找第一个 $\geq k - \mathrm{add}[i]$ 的位置
+        \item 该位置右侧的元素都满足条件，$O(\log \sqrt{n})$
+    \end{itemize}
+    \item \textbf{散块}：遍历元素，逐个判断，$O(\sqrt{n})$
+\end{enumerate}
+
+\subsubsection*{查询可视化}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.9]
+    \node at (-1.5,1.5) {查询 $\geq 6$:};
+    \node at (-1.5,1) {有序块:};
+    
+    % 有序数组
+    \foreach \i/\v in {0/1,1/3,2/5,3/7,4/8,5/10} {
+        \draw (\i*1.3,0.5) rectangle ++(1.2,0.8);
+        \node at (\i*1.3+0.6,0.9) {$\v$};
+    }
+    
+    % 标记 add
+    \node at (4, 0) {$\mathrm{add}=2$};
+    
+    % 实际值
+    \node at (-1.5,-0.5) {实际值:};
+    \foreach \i/\v in {0/3,1/5,2/7,3/9,4/10,5/12} {
+        \draw (\i*1.3,-1) rectangle ++(1.2,0.8);
+        \node at (\i*1.3+0.6,-0.6) {$\v$};
+    }
+    
+    % 二分位置
+    \draw[red, thick, ->] (2.5, -1.5) -- (2.5, -1.1);
+    \node[red] at (2.5, -1.8) {二分查找 $\geq 4$};
+    
+    % 结果
+    \draw[green!60!black, thick] (2.5,-1.2) -- (2.5,-1.5) -- (7.8,-1.5) -- (7.8,-1.2);
+    \node[green!60!black] at (5.5, -2.2) {4个元素满足条件};
+\end{tikzpicture}
+\end{center}
+
+\newpage
+
+% ========== 问题4：第3页 - 复杂度分析 ==========
+\subsection*{\Large 复杂度分析}
+
+\subsubsection*{空间复杂度}
+
+\begin{itemize}[leftmargin=2cm]
+    \item 原数组：$O(n)$
+    \item 有序副本：每块 $O(\sqrt{n})$，共 $O(\sqrt{n})$ 个块，总计 $O(n)$
+    \item 懒标记：$O(\sqrt{n})$
+    \item 总空间：$O(n)$
+\end{itemize}
+
+\subsubsection*{时间复杂度}
+
+\textbf{M操作（区间加法）}：
+
+\begin{center}
+\begin{tikzpicture}[scale=1.1]
+    % 表格
+    \node[align=left] at (-1.5,1.5) {\textbf{部分}};
+    \node at (2,1.5) {\textbf{复杂度}};
+    
+    \draw (-3,1.2) -- (4,1.2);
+    
+    \node[align=left] at (-1.5,0.7) {整块标记};
+    \node at (2,0.7) {$O(\sqrt{n})$};
+    
+    \node[align=left] at (-1.5,0.1) {散块修改+重排};
+    \node at (2,0.1) {$O(\sqrt{n} \log \sqrt{n})$};
+    
+    \draw (-3,-0.2) -- (4,-0.2);
+    
+    \node[align=left] at (-1.5,-0.7) {\textbf{单次}};
+    \node at (2,-0.7) {$\boxed{O(\sqrt{n} \log \sqrt{n})}$};
+\end{tikzpicture}
+\end{center}
+
+\textbf{A操作（区间计数）}：
+
+\begin{center}
+\begin{tikzpicture}[scale=1.1]
+    % 表格
+    \node[align=left] at (-1.5,1.5) {\textbf{部分}};
+    \node at (2,1.5) {\textbf{复杂度}};
+    
+    \draw (-3,1.2) -- (4,1.2);
+    
+    \node[align=left] at (-1.5,0.7) {整块二分};
+    \node at (2,0.7) {$O(\sqrt{n} \log \sqrt{n})$};
+    
+    \node[align=left] at (-1.5,0.1) {散块遍历};
+    \node at (2,0.1) {$O(\sqrt{n})$};
+    
+    \draw (-3,-0.2) -- (4,-0.2);
+    
+    \node[align=left] at (-1.5,-0.7) {\textbf{单次}};
+    \node at (2,-0.7) {$\boxed{O(\sqrt{n} \log \sqrt{n})}$};
+\end{tikzpicture}
+\end{center}
+
+\subsubsection*{总复杂度}
+
+$q$ 个操作，每次 $O(\sqrt{n} \log \sqrt{n})$
+
+\textbf{总时间复杂度}：$\boxed{O(q\sqrt{n} \log n)}$
+
+\end{document}
