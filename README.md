@@ -13,9 +13,9 @@
 - `Template2.pptx`: 现代专业PPT模板（用于美化演示文稿）
 - `beautify_pptx.py`: 使用模板美化PPT的Python脚本
 - `block_lecture_beautified_v1.pptx`: 使用template.pptx模板美化后的演示文稿
-- `block_lecture_beautified_v2.pptx`: 使用Template2.pptx模板美化后的演示文稿
-- `convert_math_to_latex.py`: 将数学符号转换为LaTeX公式的Python脚本
-- `block_lecture_beautified_v2_latex.pptx`: 数学公式使用LaTeX符号表示的演示文稿
+- `block_lecture_beautified_v2.pptx`: 使用Template2.pptx模板美化后的演示文稿（推荐使用，数学公式使用Unicode符号）
+- `convert_math_to_latex.py`: ⚠️ 已弃用 - LaTeX公式在PowerPoint中无法正常渲染
+- `block_lecture_beautified_v2_latex.pptx`: ⚠️ 不推荐 - LaTeX格式公式在PowerPoint中显示为纯文本
 
 ## 例题内容
 
@@ -74,29 +74,19 @@ python3 beautify_pptx.py
 或者直接使用已生成的文件：
 - `block_lecture.pptx` - 基础版本
 - `block_lecture_beautified_v1.pptx` - 使用template.pptx美化（中文风格）
-- `block_lecture_beautified_v2.pptx` - 使用Template2.pptx美化（现代专业风格）
-- `block_lecture_beautified_v2_latex.pptx` - 使用LaTeX符号表示数学公式的版本
+- `block_lecture_beautified_v2.pptx` - 使用Template2.pptx美化（现代专业风格）**[推荐]**
 
-### 数学公式转换为LaTeX
+### ⚠️ 关于数学公式显示
 
-将演示文稿中的数学符号（如 √、₁、₂、≥ 等）转换为LaTeX格式（如 $\sqrt{n}$, $a_{1}$, $\geq$ 等）：
+**重要提示：PowerPoint使用Unicode数学符号，不使用LaTeX格式**
 
-```bash
-# 转换数学符号为LaTeX
-python3 convert_math_to_latex.py
-```
+在PowerPoint中：
+- ✅ **正确做法**：使用Unicode数学符号（√、₁、₂、≥ 等），这些符号可以在PowerPoint中正常显示
+- ❌ **错误做法**：使用LaTeX格式（如 `$\sqrt{n}$`, `$a_{1}$`, `$\geq$` 等），这些在PowerPoint中会显示为纯文本，无法渲染
 
-这个脚本会：
-- 将Unicode数学符号转换为LaTeX命令
-- 将数学表达式用 `$...$` 包裹
-- 生成 `block_lecture_beautified_v2_latex.pptx` 文件
+`block_lecture_beautified_v2.pptx` 使用Unicode符号，可以在PowerPoint中正常显示数学公式。
 
-转换示例：
-- `a₁, a₂, aₙ` → `$a_{1}$, $a_{2}$, $a_{n}$`
-- `√n` → `$\sqrt{n}$`
-- `O(√n)` → `$O(\sqrt{n})$`
-- `≥, ≤` → `$\geq$, $\leq$`
-- `⌊√a⌋` → `$\lfloor \sqrt{a} \rfloor$`
+⚠️ **注意**：`convert_math_to_latex.py` 脚本已弃用，因为LaTeX格式在PowerPoint中无法正常渲染。请不要使用该脚本。
 
 ## 页面布局
 
