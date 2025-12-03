@@ -8,41 +8,32 @@ This script applies template designs to the existing presentation.
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.enum.text import PP_ALIGN
-from pptx.dml.color import RGBColor
 import os
 
-def copy_text_content(source_shape, target_shape):
-    """Copy text content from source shape to target shape"""
-    if not source_shape.has_text_frame or not target_shape.has_text_frame:
-        return
+def remove_template_slides(presentation):
+    """Remove all slides from a presentation"""
+    while len(presentation.slides) > 0:
+        rId = presentation.slides._sldIdLst[0].rId
+        presentation.part.drop_rel(rId)
+        del presentation.slides._sldIdLst[0]
+
+def extract_slide_content(source_slide, slide_idx):
+    """Extract title and content shapes from a source slide"""
+    title_text = ""
+    content_shapes = []
     
-    source_tf = source_shape.text_frame
-    target_tf = target_shape.text_frame
+    for shape in source_slide.shapes:
+        if shape.has_text_frame and shape.text.strip():
+            # For title slide (slide 0), treat the main text box as title
+            if slide_idx == 0 and not content_shapes:
+                title_text = shape.text
+            # For content slides, check if it's positioned at the top (< 1 inch)
+            elif shape.top < Inches(1.0):
+                title_text = shape.text
+            else:
+                content_shapes.append(shape)
     
-    # Clear target text frame
-    target_tf.clear()
-    
-    # Copy paragraphs
-    for source_para in source_tf.paragraphs:
-        if target_tf.paragraphs:
-            target_para = target_tf.paragraphs[0] if len(target_tf.paragraphs) == 1 else target_tf.add_paragraph()
-        else:
-            target_para = target_tf.add_paragraph()
-        
-        target_para.text = source_para.text
-        target_para.level = source_para.level
-        target_para.alignment = source_para.alignment
-        
-        # Copy font properties
-        if source_para.runs:
-            for run in source_para.runs:
-                target_run = target_para.runs[0] if target_para.runs else None
-                if target_run and run.font.size:
-                    target_run.font.size = run.font.size
-                if target_run and run.font.bold is not None:
-                    target_run.font.bold = run.font.bold
-                if target_run and run.font.color.rgb:
-                    target_run.font.color.rgb = run.font.color.rgb
+    return title_text, content_shapes
 
 def apply_template1(source_pptx, template_pptx, output_pptx):
     """Apply template.pptx design to the source presentation"""
@@ -50,16 +41,12 @@ def apply_template1(source_pptx, template_pptx, output_pptx):
     
     # Load source and template
     source_prs = Presentation(source_pptx)
-    template_prs = Presentation(template_pptx)
     
     # Create new presentation using the template
     new_prs = Presentation(template_pptx)
     
     # Remove all slides from template
-    while len(new_prs.slides) > 0:
-        rId = new_prs.slides._sldIdLst[0].rId
-        new_prs.part.drop_rel(rId)
-        del new_prs.slides._sldIdLst[0]
+    remove_template_slides(new_prs)
     
     # Process each slide from source
     for slide_idx, source_slide in enumerate(source_prs.slides):
@@ -76,20 +63,8 @@ def apply_template1(source_pptx, template_pptx, output_pptx):
         # Add new slide with chosen layout
         new_slide = new_prs.slides.add_slide(layout)
         
-        # Collect all text from source slide
-        title_text = ""
-        content_shapes = []
-        
-        for shape in source_slide.shapes:
-            if shape.has_text_frame and shape.text.strip():
-                # For title slide (slide 0), treat the main text box as title
-                if slide_idx == 0 and not content_shapes:
-                    title_text = shape.text
-                # For content slides, check if it's positioned at the top (< 1 inch)
-                elif shape.top < Inches(1.0):
-                    title_text = shape.text
-                else:
-                    content_shapes.append(shape)
+        # Extract title and content
+        title_text, content_shapes = extract_slide_content(source_slide, slide_idx)
         
         # Apply title and content
         if slide_idx == 0:
@@ -150,16 +125,12 @@ def apply_template2(source_pptx, template_pptx, output_pptx):
     
     # Load source and template
     source_prs = Presentation(source_pptx)
-    template_prs = Presentation(template_pptx)
     
     # Create new presentation using the template
     new_prs = Presentation(template_pptx)
     
     # Remove all slides from template
-    while len(new_prs.slides) > 0:
-        rId = new_prs.slides._sldIdLst[0].rId
-        new_prs.part.drop_rel(rId)
-        del new_prs.slides._sldIdLst[0]
+    remove_template_slides(new_prs)
     
     # Process each slide from source
     for slide_idx, source_slide in enumerate(source_prs.slides):
@@ -176,20 +147,8 @@ def apply_template2(source_pptx, template_pptx, output_pptx):
         # Add new slide with chosen layout
         new_slide = new_prs.slides.add_slide(layout)
         
-        # Collect all text from source slide
-        title_text = ""
-        content_shapes = []
-        
-        for shape in source_slide.shapes:
-            if shape.has_text_frame and shape.text.strip():
-                # For title slide (slide 0), treat the main text box as title
-                if slide_idx == 0 and not content_shapes:
-                    title_text = shape.text
-                # For content slides, check if it's positioned at the top (< 1 inch)
-                elif shape.top < Inches(1.0):
-                    title_text = shape.text
-                else:
-                    content_shapes.append(shape)
+        # Extract title and content
+        title_text, content_shapes = extract_slide_content(source_slide, slide_idx)
         
         # Apply title
         if title_text:
@@ -240,6 +199,25 @@ def main():
     output1_pptx = os.path.join(script_dir, 'block_lecture_beautified_v1.pptx')
     output2_pptx = os.path.join(script_dir, 'block_lecture_beautified_v2.pptx')
     
+    # Validate required files exist
+    required_files = [
+        (source_pptx, 'Source presentation'),
+        (template1_pptx, 'Template 1'),
+        (template2_pptx, 'Template 2')
+    ]
+    
+    missing_files = []
+    for filepath, description in required_files:
+        if not os.path.exists(filepath):
+            missing_files.append(f"{description}: {filepath}")
+    
+    if missing_files:
+        print("❌ Error: Required files are missing:")
+        for missing in missing_files:
+            print(f"  - {missing}")
+        print("\nPlease ensure all required files are present before running this script.")
+        return 1
+    
     # Apply both templates
     print("=" * 60)
     print("Creating beautified version 1 using template.pptx...")
@@ -256,6 +234,7 @@ def main():
     print(f"✅ Created: {output1_pptx}")
     print(f"✅ Created: {output2_pptx}")
     print("=" * 60)
+    return 0
 
 if __name__ == "__main__":
-    main()
+    exit(main())
