@@ -7,3 +7,10 @@
 *.fdb_latexmk
 *.fls
 *.xdv
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
