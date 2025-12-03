@@ -7,6 +7,8 @@
 - `Q1.md` - `Q4.md`: 四道例题的原始题目描述
 - `block_lecture.tex`: LaTeX源文件
 - `block_lecture.pdf`: 编译后的PDF讲义（23页）
+- `block_lecture.pptx`: PowerPoint演示文稿（13页，由generate_pptx.py自动生成）
+- `generate_pptx.py`: 用于从LaTeX内容生成PPTX的Python脚本
 
 ## 例题内容
 
@@ -35,6 +37,7 @@
 
 ## 如何编译
 
+### LaTeX编译
 需要安装XeLaTeX和相关中文字体支持：
 
 ```bash
@@ -47,9 +50,30 @@ xelatex block_lecture.tex
 
 或者直接使用已生成的 `block_lecture.pdf` 文件。
 
+### PowerPoint生成
+需要安装Python和python-pptx库：
+
+```bash
+# 安装依赖
+pip install python-pptx
+
+# 生成PPTX
+python3 generate_pptx.py
+```
+
+或者直接使用已生成的 `block_lecture.pptx` 文件。
+
 ## 页面布局
 
+### PDF版本（23页）
 - 第1页：封面
+- 第2-4页：例题1（题目、解法、复杂度）
+- 第5-7页：例题2（题目、解法、复杂度）
+- 第8-10页：例题3（题目、解法、复杂度）
+- 第11-13页：例题4（题目、解法、复杂度）
+
+### PowerPoint版本（13页）
+- 第1页：标题页
 - 第2-4页：例题1（题目、解法、复杂度）
 - 第5-7页：例题2（题目、解法、复杂度）
 - 第8-10页：例题3（题目、解法、复杂度）
