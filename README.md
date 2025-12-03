@@ -86,7 +86,7 @@ python3 beautify_pptx.py
 
 `block_lecture_beautified_v2.pptx` 使用Unicode符号，可以在PowerPoint中正常显示数学公式。
 
-~~`convert_math_to_latex.py` 脚本已弃用，因为LaTeX格式在PowerPoint中无法正常渲染。~~
+⚠️ **注意**：`convert_math_to_latex.py` 脚本已弃用，因为LaTeX格式在PowerPoint中无法正常渲染。请不要使用该脚本。
 
 ## 页面布局
 
