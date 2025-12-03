@@ -7,8 +7,9 @@ This script converts the LaTeX lecture notes into a PowerPoint presentation.
 
 from pptx import Presentation
 from pptx.util import Inches, Pt
-from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.enum.text import PP_ALIGN
 from pptx.dml.color import RGBColor
+import os
 
 def create_title_slide(prs):
     """Create the title slide"""
@@ -461,8 +462,9 @@ def main():
     create_example3_slides(prs)
     create_example4_slides(prs)
     
-    # Save the presentation
-    output_file = '/home/runner/work/Block-2025/Block-2025/block_lecture.pptx'
+    # Save the presentation in the same directory as the script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_file = os.path.join(script_dir, 'block_lecture.pptx')
     prs.save(output_file)
     print(f"PowerPoint presentation saved to: {output_file}")
     print(f"Total slides: {len(prs.slides)}")
