@@ -1,10 +1,37 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
+r"""
+⚠️ DEPRECATED - DO NOT USE THIS SCRIPT ⚠️
+
 Convert mathematical content in block_lecture_beautified_v2.pptx to LaTeX-style formulas.
-This script will enhance mathematical expressions by converting Unicode math symbols to 
-proper LaTeX notation within the PowerPoint text.
+
+IMPORTANT NOTE:
+This script converts Unicode math symbols to LaTeX notation (e.g., √ → $\sqrt{n}$).
+However, PowerPoint CANNOT render LaTeX formulas natively. The LaTeX notation will 
+just appear as plain text (e.g., "$\sqrt{n}$" instead of a square root symbol).
+
+PowerPoint can only display Unicode mathematical symbols directly (√, ₁, ₂, ≥, etc.).
+Therefore, this conversion is counterproductive and should NOT be used.
+
+USE block_lecture_beautified_v2.pptx INSTEAD, which uses Unicode symbols that 
+PowerPoint can actually display.
 """
+
+import sys
+import warnings
+
+# Display deprecation warning
+warnings.warn(
+    "\n" + "="*80 + "\n" +
+    "⚠️  WARNING: This script is DEPRECATED and should NOT be used!\n\n" +
+    "PowerPoint cannot render LaTeX formulas. Converting Unicode symbols to LaTeX\n" +
+    "notation (like $\\sqrt{n}$, $a_{1}$) will make them display as plain text.\n\n" +
+    "Use block_lecture_beautified_v2.pptx directly - it uses Unicode symbols that\n" +
+    "PowerPoint can properly display (√, ₁, ₂, etc.).\n" +
+    "="*80 + "\n",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 from pptx import Presentation
 from pptx.util import Inches, Pt
