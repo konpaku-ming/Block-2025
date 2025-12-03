@@ -7,3 +7,6 @@
 *.fdb_latexmk
 *.fls
 *.xdv
+
+# Helper scripts
+generate_pptx.py
